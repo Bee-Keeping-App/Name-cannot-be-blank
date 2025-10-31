@@ -1,22 +1,27 @@
-const { mongodb } = require('mongodb')
-const { argon } = require('argon2')
+const { MongoClient } = require('mongodb');
+const argon2 = require('argon2');
 
-class MongoClient {
+class MongoBongo {
 
     // should initialize core vars, but not connect (construct can't be async)
     constructor(connectionString) {
         
         this.cString = connectionString;
-        this.client = new mongodb(connectionString);
+        this.client = new MongoClient(connectionString);
         this.db = null;
     }
 
+    // becomes connected
+    async becomeConnected() {
+        if (!this.isConnected()) {
+            await this.connect();
+        }
+    }
 
     // returns t/f if the client is connected
     async isConnected() {
         try{
-            const res = await this.client.isConnected();
-            return res;
+            return this.client && this.client.topology?.isConnected();
         } catch(error) {
             return false;
         }
@@ -26,7 +31,7 @@ class MongoClient {
     // make the connection
     async connect() {
         await this.client.connect();
-        this.db = this.client("beekeepR");
+        this.db = this.client.db('test-database');
     }
 
 
@@ -50,7 +55,7 @@ class MongoClient {
     
     // compare hashes
     async comparePasswords(attempt, hash) {
-        if (await argon.verify(hash, attempt)) {
+        if (await argon2.verify(hash, attempt)) {
             return true;
         } else {
             return false;
@@ -59,4 +64,4 @@ class MongoClient {
 }
 
 // export the client
-export {MongoClient};
+module.exports = MongoBongo;

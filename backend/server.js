@@ -1,14 +1,18 @@
+/* Import dotenv First */
+require('dotenv').config();
+
+/* Package Imports */
 const { express } = require('express');
-const { MongoClient } = require('./dbClient');
+const MongoClient = require('./dbClient');
 
 /* DB Client */
-const DB = MongoClient('connectionStringHere');
+const DB = new MongoClient(process.env.DB_CONN);
 
 /* Port */
-const PORT = 3000
+const PORT = 3000;
 
 /* Middlewares */
-const server = express()
+const server = express();
 
 /* endpoint list */
 /*
@@ -17,6 +21,8 @@ const server = express()
 */
 
 server.post('/login', async (req, res) => {
+
+    await DB.becomeConnected();
 
     // ensure the login request is correctly formatted
     if (!Validator.login(req)) {
@@ -42,6 +48,10 @@ server.post('/login', async (req, res) => {
             return res.status(400).json({msg: 'passwords do not match'});
         }
     } catch(error) {
-        return res.status(500).json({msg: 'internal server error. try again'})
+        return res.status(500).json({msg: 'internal server error. try again'});
     }
 });
+
+server.listen(PORT, () => {
+    console.log('server is connected on port ' + PORT);
+})
